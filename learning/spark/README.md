@@ -4,7 +4,7 @@ Local PySpark development environment with a Docker-based Spark cluster.
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.10+
 - [uv](https://docs.astral.sh/uv/) package manager
 - Docker and Docker Compose
 - Java 21 (for local PySpark)
