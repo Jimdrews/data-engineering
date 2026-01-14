@@ -1,0 +1,64 @@
+services:
+  spark-master:
+    image: apache/spark:4.1.1-java21-python3
+    container_name: spark-master
+    hostname: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+    networks:
+      - spark-network
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  spark-worker:
+    image: apache/spark:4.1.1-java21-python3
+    hostname: spark-worker
+    ports:
+      - "8081:8081"
+    environment:
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+    networks:
+      - spark-network
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+networks:
+  spark-network:
+    name: spark-network
+    driver: bridge
